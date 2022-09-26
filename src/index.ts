@@ -21,6 +21,7 @@
  */
 
 import { hexToNumber, isAddress, leftPad, toHex } from 'web3-utils';
+import Web3 from 'web3';
 
 import { Web3ProviderWrapper } from './providers/web3ProviderWrapper';
 import { EthereumProviderWrapper } from './providers/ethereumProviderWrapper';
@@ -154,22 +155,27 @@ export class ERC725 {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  private initializeProvider(providerOrProviderWrapper) {
+  private initializeProvider(providerOrrpcUrl) {
     // do not fail on no-provider
-    if (!providerOrProviderWrapper) return undefined;
+    if (!providerOrrpcUrl) return undefined;
 
-    if (typeof providerOrProviderWrapper.request === 'function')
-      return new EthereumProviderWrapper(providerOrProviderWrapper);
+    // if provider is a string, assume it's a rpcUrl
+    if (typeof providerOrrpcUrl === 'string') {
+      return new Web3ProviderWrapper(
+        new Web3.providers.HttpProvider(providerOrrpcUrl),
+      );
+    }
+
+    if (typeof providerOrrpcUrl.request === 'function')
+      return new EthereumProviderWrapper(providerOrrpcUrl);
 
     if (
-      !providerOrProviderWrapper.request &&
-      typeof providerOrProviderWrapper.send === 'function'
+      !providerOrrpcUrl.request &&
+      typeof providerOrrpcUrl.send === 'function'
     )
-      return new Web3ProviderWrapper(providerOrProviderWrapper);
+      return new Web3ProviderWrapper(providerOrrpcUrl);
 
-    throw new Error(
-      `Incorrect or unsupported provider ${providerOrProviderWrapper}`,
-    );
+    throw new Error(`Incorrect or unsupported provider ${providerOrrpcUrl}`);
   }
 
   /**
